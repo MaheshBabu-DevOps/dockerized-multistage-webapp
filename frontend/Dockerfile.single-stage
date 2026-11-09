@@ -1,0 +1,10 @@
+# For comparison only (see scripts/measure-images.sh): the "naive" way to containerize.
+# Full Node image, dev dependencies and source kept, serves the app with the Vite preview server.
+FROM node:22
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+EXPOSE 8080
+CMD ["npm", "run", "preview"]

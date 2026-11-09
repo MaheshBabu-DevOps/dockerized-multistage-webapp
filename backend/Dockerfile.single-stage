@@ -1,0 +1,9 @@
+# For comparison only (see scripts/measure-images.sh): the "naive" way to containerize.
+# Full Debian-based Python image, tools and caches left in, runs as root.
+FROM python:3.12
+WORKDIR /srv
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY app ./app
+EXPOSE 8000
+CMD ["gunicorn", "app.main:create_app()", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
