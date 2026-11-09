@@ -66,7 +66,31 @@ Pull requests run the tests but never push images.
 
 ## Measured results
 
-<!-- MEASUREMENTS -->
+Each service was built twice: the usual single-stage way (full base image, build tools left in,
+runs as root) and the multi-stage way used in this repository. These numbers come from
+`scripts/measure-images.sh`, run on one machine, so treat the times as relative.
+
+**Image size**
+
+| Image | Single-stage | Multi-stage | Smaller by |
+|---|---|---|---|
+| Backend (Python) | 469 MB | 93 MB | 80% |
+| Frontend (React) | 476 MB | 26 MB | 95% |
+
+**Build time**
+
+| Image | Cold build (no cache) | Rebuild after a source change |
+|---|---|---|
+| Backend, single-stage | 27.2 s | 1.0 s |
+| Backend, multi-stage | 19.3 s | 1.8 s |
+| Frontend, single-stage | 12.9 s | 1.0 s |
+| Frontend, multi-stage | 10.4 s | 1.6 s |
+
+Where the savings come from: the frontend image no longer contains Node, `node_modules` or the
+sources, only the built files and Nginx. The backend saving mostly comes from the slim base image.
+The multi-stage rebuild after a one-file change is about a second slower because of the extra
+stage and copy steps, which is a small cost for images that are many times smaller. The full
+report is in [docs/image-comparison.md](docs/image-comparison.md).
 
 ## Run it locally
 
@@ -149,6 +173,6 @@ available with Redis stopped.
 - Compose credentials are development defaults. Production would use a secret manager.
 - Tested with Docker only. The Compose file uses standard features and should work with
   `podman compose`, but that has not been tested here.
-- The CI workflow has not been run on GitHub yet; it was checked as valid YAML and its commands
-  were run locally.
+- The backend and frontend test jobs pass on GitHub Actions. The image push job needs the two
+  Docker Hub secrets described above before it can succeed.
 - Images are not scanned for vulnerabilities in CI yet. Adding a Trivy step is a natural next step.
