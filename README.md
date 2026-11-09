@@ -7,11 +7,13 @@ pipeline that tests the backend and frontend in parallel and then builds and pus
 Docker Hub.
 
 It is a personal portfolio project. The application is deliberately simple (a notes app) so the
-focus stays on the container, orchestration and CI/CD work around it.
+focus stays on the container, orchestration and CI work around it.
 
 ## Architecture
 
-![Runtime architecture](docs/architecture.svg)
+![Architecture: CI pipeline and runtime stack](docs/architecture.svg)
+
+The top half is the **CI pipeline** (GitHub Actions). The bottom half is the **running application** (Docker Compose).
 
 | Service | Image | Role |
 |---|---|---|
@@ -48,11 +50,10 @@ after the backend reports healthy.
 - *Backend:* stage 1 builds the Python wheels. Stage 2 starts from a slim Python image,
   installs from those wheels with no network and no pip cache, and runs as a non-root user.
 
-## CI/CD pipeline
+## CI pipeline
 
-![CI/CD pipeline](docs/cicd-pipeline.svg)
-
-The workflow in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request:
+The workflow in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request. It is a **CI pipeline that also publishes images**: it tests the code and
+builds and pushes images to Docker Hub, but it does not deploy them anywhere.
 
 1. **backend-test:** `ruff` lint and format check, then `pytest`.
 2. **frontend-test:** `npm ci`, `vitest`, then a production build.
@@ -167,6 +168,8 @@ available with Redis stopped.
 
 ## Known limitations
 
+- **No automated deployment (CD).** Images are published to Docker Hub, but nothing deploys them. A natural
+  next step is a deploy job that pulls the images on a server and restarts the stack.
 - Tables are created with `create_all` in a one-time init step. A real project would use
   migrations (for example Alembic).
 - No authentication. Anyone who can reach the app can read and delete notes.
